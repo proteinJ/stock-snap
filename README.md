@@ -70,4 +70,5 @@
 
 - 사이트: https://proteinj.github.io/stock-snap/
 - 제안서 원본: [docs/PROPOSAL.md](docs/PROPOSAL.md)
+- 이슈 규칙: 모든 이슈에는 **유형 1개 + 우선순위 1개 + 영역 1개** 라벨을 반드시 붙인다.
 - 라이선스: MIT
