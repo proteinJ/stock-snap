@@ -131,7 +131,7 @@
 
     async function load() {
       try {
-        const response = await fetch('./metrics.json', { cache: 'no-store' });
+        const response = await fetch('./dora.json', { cache: 'no-store' });
         if (!response.ok) throw new Error('No metrics file');
         const metrics = await response.json();
         if (!Array.isArray(metrics) || metrics.length === 0) throw new Error('No metrics data');
