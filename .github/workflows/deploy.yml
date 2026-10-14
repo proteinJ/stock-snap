@@ -22,6 +22,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - name: Copy DORA metrics for Pages
+        run: |
+          if [ -f metrics/dora.json ]; then
+            cp metrics/dora.json site/dora.json
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

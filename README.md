@@ -51,6 +51,21 @@
 | 15 | Dependabot, 브랜치 보호 규칙 적용, 문서화 |
 | 16 | **최종 발표, v1.0 릴리스** |
 
+## 6. DORA 메트릭
+
+### 지표 정의
+| 지표 | 정의 |
+|---|---|
+| Deployment Frequency | `.github/workflows/deploy.yml` 중 `event == "push"` 이고 `conclusion == "success"` 인 배포 run의 ISO 주차별 개수 |
+| Lead Time for Changes | main에 머지된 PR의 첫 커밋 author date부터, `head_sha == merge_commit_sha` 인 성공 배포 run `updated_at`까지의 시간(주차별 중앙값, 시간 단위) |
+| Change Failure Rate | 해당 주차에 생성된 `label=incident` 이슈 수 / 해당 주차 성공 배포 수(배포 0이면 `null`) |
+| MTTR | 해당 주차에 닫힌 `label=incident` 이슈의 `(closed_at - created_at)` 평균(시간 단위, 없으면 `null`) |
+
+![DORA](docs/images/dora-dashboard.png)
+
+- 대시보드: https://proteinj.github.io/stock-snap/dora.html
+- 수동 실행: GitHub Actions에서 `dora` 워크플로를 `workflow_dispatch`로 실행
+
 ---
 
 - 사이트: https://proteinj.github.io/stock-snap/
