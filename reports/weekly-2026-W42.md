@@ -1,13 +1,13 @@
 # DORA Weekly Report (2026-W42)
 
 ## This Week
-- Deployment Frequency: 0 (Low)
-- Lead Time for Changes: N/A (N/A)
-- Change Failure Rate: N/A (N/A)
-- MTTR: N/A (N/A)
+- Deployment Frequency: 6 (High)
+- Lead Time for Changes: 0.09 hours (Elite)
+- Change Failure Rate: 0.50 (Low)
+- MTTR: 0.12 hours (Elite)
 
 ## Week-over-Week Delta
-- Deployment Frequency: +0
+- Deployment Frequency: +6
 - Lead Time for Changes: N/A
 - Change Failure Rate: N/A
 - MTTR: N/A
