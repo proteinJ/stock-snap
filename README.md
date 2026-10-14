@@ -66,6 +66,16 @@
 - 대시보드: https://proteinj.github.io/stock-snap/dora.html
 - 수동 실행: GitHub Actions에서 `dora` 워크플로를 `workflow_dispatch`로 실행
 
+## 7. 라벨 규칙
+
+모든 이슈에는 아래 라벨을 각각 정확히 1개씩 붙입니다.
+
+| 라벨 그룹 | 필수 개수 | 용도 | 예시 |
+|---|---:|---|---|
+| 유형 (`bug` / `enhancement` / `documentation` / `incident`) | 1개 | 이슈 성격 구분 | `bug` |
+| 우선순위 (`priority:p1` ~ `priority:p3`) | 1개 | 처리 긴급도 구분 | `priority:p2` |
+| 영역 (`area:*`) | 1개 | 영향 범위 구분 | `area:analysis` |
+
 ---
 
 - 사이트: https://proteinj.github.io/stock-snap/

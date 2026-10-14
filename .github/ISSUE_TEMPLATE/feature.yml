@@ -1,0 +1,68 @@
+name: Feature
+description: 기능 개선 또는 신규 기능을 제안합니다.
+title: "[Feature] "
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: 영역
+      options:
+        - collector
+        - analysis
+        - site
+        - dora
+        - workflow
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 우선순위
+      options:
+        - p1
+        - p2
+        - p3
+    validations:
+      required: true
+
+  - type: dropdown
+    id: effort
+    attributes:
+      label: 예상 작업량
+      options:
+        - "1"
+        - "2"
+        - "3"
+        - "5"
+        - "8"
+    validations:
+      required: true
+
+  - type: textarea
+    id: background
+    attributes:
+      label: 배경
+      description: 이 작업이 필요한 배경과 문제를 작성해 주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: 작업 내용
+      description: 구현해야 할 작업 범위를 구체적으로 작성해 주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    id: done
+    attributes:
+      label: 완료 조건
+      description: 완료 기준을 체크리스트로 작성해 주세요.
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
