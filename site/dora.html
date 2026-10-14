@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DORA Metrics Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px auto; max-width: 1100px; padding: 0 16px; color: #1f2328; }
+    h1 { margin-bottom: 6px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 20px 0; }
+    .card { border: 1px solid #d0d7de; border-radius: 8px; padding: 12px; background: #fff; }
+    .metric-value { font-size: 1.4rem; font-weight: 700; margin: 8px 0; }
+    .grade { color: #59636e; }
+    .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+    .chart-wrap { border: 1px solid #d0d7de; border-radius: 8px; padding: 12px; min-height: 260px; }
+    .no-data { color: #59636e; font-style: italic; }
+  </style>
+</head>
+<body>
+  <h1>DORA Metrics Dashboard</h1>
+  <p><a href="./index.html">Back to home</a></p>
+  <div id="cards" class="cards"></div>
+  <div class="charts">
+    <div class="chart-wrap"><canvas id="deploymentChart"></canvas></div>
+    <div class="chart-wrap"><canvas id="leadTimeChart"></canvas></div>
+    <div class="chart-wrap"><canvas id="failureRateChart"></canvas></div>
+    <div class="chart-wrap"><canvas id="mttrChart"></canvas></div>
+  </div>
+
+  <script>
+    const THRESHOLDS = {
+      deployment_frequency: { elite: 7.0, high: 1.0, medium: 0.25 },
+      lead_time_hours: { elite: 24, high: 168, medium: 720 },
+      change_failure_rate: { elite: 0.15, high: 0.30, medium: 0.45 },
+      mttr_hours: { elite: 24, high: 168, medium: 720 },
+    };
+
+    function gradeDeploymentFrequency(value) {
+      if (value == null) return 'N/A';
+      if (value >= THRESHOLDS.deployment_frequency.elite) return 'Elite';
+      if (value >= THRESHOLDS.deployment_frequency.high) return 'High';
+      if (value >= THRESHOLDS.deployment_frequency.medium) return 'Medium';
+      return 'Low';
+    }
+
+    function gradeLowerIsBetter(value, limits) {
+      if (value == null) return 'N/A';
+      if (value <= limits.elite) return 'Elite';
+      if (value <= limits.high) return 'High';
+      if (value <= limits.medium) return 'Medium';
+      return 'Low';
+    }
+
+    function formatValue(value, suffix = '') {
+      if (value == null) return '데이터 없음';
+      return `${value}${suffix}`;
+    }
+
+    function renderCards(latest) {
+      const cards = [
+        {
+          title: 'Deployment Frequency',
+          value: formatValue(latest.deployment_frequency),
+          grade: gradeDeploymentFrequency(latest.deployment_frequency),
+        },
+        {
+          title: 'Lead Time for Changes',
+          value: formatValue(latest.lead_time_hours, ' h'),
+          grade: gradeLowerIsBetter(latest.lead_time_hours, THRESHOLDS.lead_time_hours),
+        },
+        {
+          title: 'Change Failure Rate',
+          value: formatValue(latest.change_failure_rate),
+          grade: gradeLowerIsBetter(latest.change_failure_rate, THRESHOLDS.change_failure_rate),
+        },
+        {
+          title: 'MTTR',
+          value: formatValue(latest.mttr_hours, ' h'),
+          grade: gradeLowerIsBetter(latest.mttr_hours, THRESHOLDS.mttr_hours),
+        },
+      ];
+
+      const container = document.getElementById('cards');
+      container.innerHTML = cards
+        .map((card) => `
+          <article class="card">
+            <div>${card.title}</div>
+            <div class="metric-value">${card.value}</div>
+            <div class="grade">Grade: ${card.grade}</div>
+          </article>
+        `)
+        .join('');
+    }
+
+    function toNumericOrNull(values) {
+      return values.map((value) => (value == null ? null : Number(value)));
+    }
+
+    function renderChart(elementId, type, label, labels, data) {
+      const ctx = document.getElementById(elementId);
+      if (!ctx) return;
+      const hasData = data.some((value) => value != null);
+      if (!hasData) {
+        ctx.replaceWith(Object.assign(document.createElement('p'), {
+          className: 'no-data',
+          textContent: `${label}: 데이터 없음`,
+        }));
+        return;
+      }
+      new Chart(ctx, {
+        type,
+        data: {
+          labels,
+          datasets: [{
+            label,
+            data,
+            borderWidth: 2,
+            borderColor: '#0969da',
+            backgroundColor: type === 'bar' ? '#54aeff' : 'rgba(9, 105, 218, 0.2)',
+            spanGaps: false,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { y: { beginAtZero: true } },
+        },
+      });
+    }
+
+    async function load() {
+      try {
+        const response = await fetch('./dora.json', { cache: 'no-store' });
+        if (!response.ok) throw new Error('No metrics file');
+        const metrics = await response.json();
+        if (!Array.isArray(metrics) || metrics.length === 0) throw new Error('No metrics data');
+
+        const latest = metrics[metrics.length - 1];
+        renderCards(latest);
+
+        const labels = metrics.map((row) => row.week);
+        renderChart('deploymentChart', 'bar', 'Deployment Frequency', labels, toNumericOrNull(metrics.map((row) => row.deployment_frequency)));
+        renderChart('leadTimeChart', 'line', 'Lead Time (hours)', labels, toNumericOrNull(metrics.map((row) => row.lead_time_hours)));
+        renderChart('failureRateChart', 'line', 'Change Failure Rate', labels, toNumericOrNull(metrics.map((row) => row.change_failure_rate)));
+        renderChart('mttrChart', 'line', 'MTTR (hours)', labels, toNumericOrNull(metrics.map((row) => row.mttr_hours)));
+      } catch {
+        document.getElementById('cards').innerHTML = '<article class="card"><div class="no-data">데이터 없음</div></article>';
+        ['deploymentChart', 'leadTimeChart', 'failureRateChart', 'mttrChart'].forEach((id) => {
+          const chart = document.getElementById(id);
+          if (chart) {
+            chart.replaceWith(Object.assign(document.createElement('p'), {
+              className: 'no-data',
+              textContent: '데이터 없음',
+            }));
+          }
+        });
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
