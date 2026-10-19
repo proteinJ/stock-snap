@@ -1,12 +1,5 @@
 [
   {
-    "week": "2026-W31",
-    "deployment_frequency": 0,
-    "lead_time_hours": null,
-    "change_failure_rate": null,
-    "mttr_hours": null
-  },
-  {
     "week": "2026-W32",
     "deployment_frequency": 0,
     "lead_time_hours": null,
@@ -82,5 +75,12 @@
     "lead_time_hours": 0.12,
     "change_failure_rate": 0.43,
     "mttr_hours": 0.12
+  },
+  {
+    "week": "2026-W43",
+    "deployment_frequency": 0,
+    "lead_time_hours": null,
+    "change_failure_rate": null,
+    "mttr_hours": null
   }
 ]
