@@ -31,7 +31,7 @@ jobs:
         run: python scripts/dora.py
 
       - name: Upload DORA metrics artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dora-metrics
           path: metrics/dora.json
