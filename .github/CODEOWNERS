@@ -1,0 +1,5 @@
+# 모든 파일의 기본 리뷰어
+* @proteinJ
+
+# 워크플로 변경은 권한과 토큰을 특히 주의해서 리뷰
+/.github/workflows/ @proteinJ
