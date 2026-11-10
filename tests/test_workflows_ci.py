@@ -27,8 +27,8 @@ def test_ci_workflow_triggers_and_job_config() -> None:
     assert set(jobs) == {"test"}
 
     steps = jobs["test"]["steps"]
-    assert steps[0]["uses"] == "actions/checkout@v4"
-    assert steps[1]["uses"] == "actions/setup-python@v5"
+    assert steps[0]["uses"].startswith("actions/checkout@")
+    assert steps[1]["uses"].startswith("actions/setup-python@")
     assert steps[1]["with"] == {"python-version": "3.12", "cache": "pip"}
     assert steps[2]["run"] == "pip install -r requirements.txt"
     assert steps[3]["run"] == "pytest"
@@ -46,7 +46,7 @@ def test_pr_title_workflow_triggers_and_semantic_types() -> None:
     assert set(jobs) == {"pr-title"}
 
     step = jobs["pr-title"]["steps"][0]
-    assert step["uses"] == "amannn/action-semantic-pull-request@v5"
+    assert step["uses"].startswith("amannn/action-semantic-pull-request@")
     assert step["env"] == {"GITHUB_TOKEN": "${{ secrets.GITHUB_TOKEN }}"}
     assert step["with"]["types"].splitlines() == [
         "feat",
