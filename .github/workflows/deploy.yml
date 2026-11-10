@@ -27,7 +27,7 @@ jobs:
           if [ -f metrics/dora.json ]; then
             cp metrics/dora.json site/dora.json
           fi
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
