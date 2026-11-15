@@ -3,14 +3,24 @@ name: deploy
 on:
   push:
     branches: [main]
+    paths:
+      - 'site/**'
+      - 'metrics/**'
+      - '.github/workflows/deploy.yml'
+      - '.github/workflows/reusable-test.yml'
+      - '.github/actions/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - 'metrics/**'
+      - '.github/workflows/deploy.yml'
+      - '.github/workflows/reusable-test.yml'
+      - '.github/actions/**'
   workflow_dispatch:
 
 permissions:
   contents: read
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 jobs:
   build:
@@ -24,6 +34,13 @@ jobs:
             cp metrics/dora.json site/dora.json
           fi
 
+      - name: Check built site
+        run: |
+          test -f site/index.html
+          test -f site/dora.html
+          test -f site/dora.json
+          python3 -c "import json; json.load(open('site/dora.json', encoding='utf-8'))"
+
       - name: Upload site artifact
         uses: actions/upload-artifact@v4
         with:
@@ -33,37 +50,15 @@ jobs:
 
   test:
     needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: pip
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Run tests
-        run: pytest
-
-      - name: Download site artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: site
-          path: dist
-
-      - name: Check built site
-        run: |
-          test -f dist/index.html
-          test -f dist/dora.html
-          test -f dist/dora.json
-          python -c "import json; json.load(open('dist/dora.json', encoding='utf-8'))"
+    uses: ./.github/workflows/reusable-test.yml
 
   deploy:
     needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     permissions:
       pages: write
       id-token: write
