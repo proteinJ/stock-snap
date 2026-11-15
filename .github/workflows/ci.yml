@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -22,6 +22,38 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      - name: Lint
+        run: ruff check .
+
+  test:
+    needs: lint
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ['3.11', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Check secret injection
+        env:
+          STOCK_API_KEY: ${{ secrets.STOCK_API_KEY }}
+        run: |
+          if [ -z "$STOCK_API_KEY" ]; then
+            echo "::warning::STOCK_API_KEY is not set (expected on Dependabot and fork PRs)"
+          else
+            echo "STOCK_API_KEY is injected"
+          fi
 
       - name: Run tests
         run: pytest
