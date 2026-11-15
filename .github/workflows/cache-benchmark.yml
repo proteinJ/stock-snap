@@ -1,0 +1,77 @@
+name: cache-benchmark
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  no-cache:
+    runs-on: ubuntu-latest
+    outputs:
+      seconds: ${{ steps.timer.outputs.seconds }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Start timer
+        run: echo "START=$(date +%s.%N)" >> "$GITHUB_ENV"
+
+      - uses: ./.github/actions/setup-python-env
+        with:
+          cache: 'false'
+
+      - name: Run tests
+        run: pytest -q
+
+      - id: timer
+        name: Stop timer
+        run: echo "seconds=$(python -c "import os, time; print(round(time.time() - float(os.environ['START']), 1))")" >> "$GITHUB_OUTPUT"
+
+  with-cache:
+    runs-on: ubuntu-latest
+    outputs:
+      seconds: ${{ steps.timer.outputs.seconds }}
+      cache-hit: ${{ steps.setup.outputs.cache-hit }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Start timer
+        run: echo "START=$(date +%s.%N)" >> "$GITHUB_ENV"
+
+      - id: setup
+        uses: ./.github/actions/setup-python-env
+        with:
+          cache: 'true'
+
+      - name: Run tests
+        run: pytest -q
+
+      - id: timer
+        name: Stop timer
+        run: echo "seconds=$(python -c "import os, time; print(round(time.time() - float(os.environ['START']), 1))")" >> "$GITHUB_OUTPUT"
+
+  report:
+    needs: [no-cache, with-cache]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write comparison to job summary
+        env:
+          NO_CACHE: ${{ needs.no-cache.outputs.seconds }}
+          WITH_CACHE: ${{ needs.with-cache.outputs.seconds }}
+          CACHE_HIT: ${{ needs.with-cache.outputs.cache-hit }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import os
+          before = float(os.environ["NO_CACHE"])
+          after = float(os.environ["WITH_CACHE"])
+          hit = os.environ.get("CACHE_HIT") or "false"
+          rate = (before - after) / before * 100
+          print("## 캐시 전후 실행 시간 (환경 설정 + 의존성 설치 + pytest)")
+          print()
+          print("| 구분 | 시간(초) |")
+          print("|---|---|")
+          print(f"| 캐시 없음 | {before:.1f} |")
+          print(f"| 캐시 사용 (cache-hit: {hit}) | {after:.1f} |")
+          print(f"| **개선률** | **{rate:.1f}%** |")
+          PY
