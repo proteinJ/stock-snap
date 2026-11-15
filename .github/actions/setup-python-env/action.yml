@@ -1,0 +1,50 @@
+name: Setup Python environment
+description: Python 설치 후 가상환경(.venv)에 requirements.txt를 설치하고, 가상환경을 캐시해 재사용한다.
+
+inputs:
+  python-version:
+    description: 설치할 Python 버전
+    required: false
+    default: '3.12'
+  cache:
+    description: "가상환경 캐시 사용 여부 ('true' / 'false')"
+    required: false
+    default: 'true'
+
+outputs:
+  cache-hit:
+    description: 가상환경 캐시 적중 여부
+    value: ${{ steps.cache.outputs.cache-hit }}
+
+runs:
+  using: composite
+  steps:
+    - id: python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - id: cache
+      if: inputs.cache == 'true'
+      uses: actions/cache@v4
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ runner.arch }}-py${{ steps.python.outputs.python-version }}-${{ hashFiles('requirements.txt') }}
+
+    - name: Create virtualenv and install dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        python -m venv .venv
+        if [ "$RUNNER_OS" = "Windows" ]; then VENV_PY=.venv/Scripts/python; else VENV_PY=.venv/bin/python; fi
+        "$VENV_PY" -m pip install -r requirements.txt
+
+    - name: Activate virtualenv
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" = "Windows" ]; then
+          echo "$GITHUB_WORKSPACE\\.venv\\Scripts" >> "$GITHUB_PATH"
+        else
+          echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
+        fi
+        echo "VIRTUAL_ENV=$GITHUB_WORKSPACE/.venv" >> "$GITHUB_ENV"
