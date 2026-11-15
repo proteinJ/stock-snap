@@ -1,0 +1,43 @@
+name: reusable-test
+
+on:
+  workflow_call:
+    inputs:
+      matrix:
+        description: 'strategy.matrix로 쓸 JSON (os, python-version, include, exclude)'
+        required: false
+        type: string
+        default: '{"os": ["ubuntu-latest"], "python-version": ["3.12"]}'
+    secrets:
+      STOCK_API_KEY:
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(inputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup-python-env
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Check secret injection
+        shell: bash
+        env:
+          STOCK_API_KEY: ${{ secrets.STOCK_API_KEY }}
+        run: |
+          if [ -z "$STOCK_API_KEY" ]; then
+            echo "::warning::STOCK_API_KEY is not set (expected on Dependabot and fork PRs)"
+          else
+            echo "STOCK_API_KEY is injected"
+          fi
+
+      - name: Run tests
+        run: pytest
